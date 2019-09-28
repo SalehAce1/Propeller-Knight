@@ -130,7 +130,6 @@
     <Compile Include="ShipControl.cs" />
     <Compile Include="SpikeCollider.cs" />
   </ItemGroup>
-  <ItemGroup />
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="@echo on" />
     <Exec Command="echo Copying mod" />

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Reflection;
+using System.Linq;
 using Logger = Modding.Logger;
 using UObject = UnityEngine.Object;
 using USceneManager = UnityEngine.SceneManagement.SceneManager;
@@ -133,16 +135,11 @@ namespace PropellerKnight
             prop.SetActive(true);
             var _hm = prop.AddComponent<HealthManager>();
             HealthManager hornHP = PropellerKnight.preloadedGO["hornet"].GetComponent<HealthManager>();
-            GameObject hornetFab = Modding.ReflectionHelper.GetAttr<HealthManager, GameObject>(hornHP, "strikeNailPrefab");
-            GameObject hornetFab2 = Modding.ReflectionHelper.GetAttr<HealthManager, GameObject>(hornHP, "slashImpactPrefab");
-            GameObject hornetFab3 = Modding.ReflectionHelper.GetAttr<HealthManager, GameObject>(hornHP, "blockHitPrefab");
-            GameObject hornetFab4 = Modding.ReflectionHelper.GetAttr<HealthManager, GameObject>(hornHP, "fireballHitPrefab");
-            GameObject hornetFab5 = Modding.ReflectionHelper.GetAttr<HealthManager, GameObject>(hornHP, "sharpShadowImpactPrefab");
-            Modding.ReflectionHelper.SetAttr(_hm, "strikeNailPrefab", hornetFab);
-            Modding.ReflectionHelper.SetAttr(_hm, "slashImpactPrefab", hornetFab2);
-            Modding.ReflectionHelper.SetAttr(_hm, "blockHitPrefab", hornetFab3);
-            Modding.ReflectionHelper.SetAttr(_hm, "fireballHitPrefab", hornetFab4);
-            Modding.ReflectionHelper.SetAttr(_hm, "sharpShadowImpactPrefab", hornetFab5);
+            foreach (FieldInfo fi in typeof(HealthManager).GetFields(BindingFlags.Instance | BindingFlags.NonPublic).Where(x => x.Name.Contains("Prefab")))
+            {
+                fi.SetValue(_hm, fi.GetValue(hornHP));
+            }
+
             var _sr = prop.GetComponent<SpriteRenderer>();
             _sr.material = materials["flash"];
 
