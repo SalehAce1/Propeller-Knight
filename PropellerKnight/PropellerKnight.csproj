@@ -35,11 +35,24 @@
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
+    <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
     <Reference Include="AssetsTools.NET">
       <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\AssetsTools.NET.dll</HintPath>
     </Reference>
+    <Reference Include="ConditionalExpression">
+      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\ConditionalExpression.dll</HintPath>
+    </Reference>
+    <Reference Include="GalaxyCSharp">
+      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\GalaxyCSharp.dll</HintPath>
+    </Reference>
     <Reference Include="ModCommon">
       <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\ModCommon.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Security">
+      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mono.Security.dll</HintPath>
     </Reference>
     <Reference Include="PlayMaker">
       <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\PlayMaker.dll</HintPath>
@@ -52,6 +65,10 @@
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
       <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.AIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AnimationModule">
       <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
@@ -83,6 +100,10 @@
     <Reference Include="UnityEngine.SpriteMaskModule">
       <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.SpriteMaskModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.UI.dll</HintPath>
     </Reference>
@@ -92,17 +113,24 @@
     <Reference Include="UnityEngine.UIModule">
       <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.UIModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.WindModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.WindModule.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AnimatorExtensions.cs" />
     <Compile Include="ArenaFinder.cs" />
-    <Compile Include="CustomAnimator.cs" />
+    <Compile Include="BallControl.cs" />
+    <Compile Include="BombControl.cs" />
+    <Compile Include="PropDeath.cs" />
     <Compile Include="PropellerKnight.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropFight.cs" />
+    <Compile Include="ShipControl.cs" />
+    <Compile Include="SpikeCollider.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="sprites\" />
-  </ItemGroup>
+  <ItemGroup />
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="@echo on" />
     <Exec Command="echo Copying mod" />
