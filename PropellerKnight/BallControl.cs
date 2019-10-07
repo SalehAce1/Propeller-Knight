@@ -10,7 +10,6 @@ namespace PropellerKnight
         bool start;
         public bool faceRight;
         AudioSource _aud;
-        public static bool unfair = false;
         IEnumerator Start()
         {
             Destroy(GetComponent<CircleCollider2D>());
@@ -28,7 +27,6 @@ namespace PropellerKnight
         {
             if (start && c.gameObject.layer == 8)
             {
-                unfair = true;
                 _aud.clip = ArenaFinder.audioClips["canon"];
                 _aud.Play();
                 PlayMakerFSM lord = PropellerKnight.preloadedGO["wave"].LocateMyFSM("Mage Lord");
@@ -42,14 +40,7 @@ namespace PropellerKnight
                     go.SetActive(true);
                     go.transform.SetPosition2D(gameObject.transform.position);
                 }
-                StartCoroutine(ResetUnfair());
             }
-        }
-
-        IEnumerator ResetUnfair()
-        {
-            yield return new WaitForSeconds(0.8f);
-            unfair = false;
         }
     }
 }

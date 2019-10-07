@@ -63,7 +63,7 @@ namespace PropellerKnight
         IEnumerator SendItem()
         {
             //90 96 102 108 114
-            if (sendLargeBalls = !sendLargeBalls)
+            if (sendLargeBalls)
             {
                 for (float i = 92.3f; i <= 113; i += 6.8f)
                 {

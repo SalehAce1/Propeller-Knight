@@ -34,10 +34,10 @@ namespace PropellerKnight
         private float idleTime;
         private bool aboveHead;
         private const float GROUND_Y = 5.25f;
-        private const float RIGHT_X = 114;
-        private const float LEFT_X = 90f;
-        private const int HP_MAX = 300;
-        private const int HP_PHASE2 = 200;
+        private const float RIGHT_X = 115.5f;
+        private const float LEFT_X = 88.5f;
+        private const int HP_MAX = 225;
+        private const int HP_PHASE2 = 150;
 
         private void Awake()
         {
@@ -145,15 +145,22 @@ namespace PropellerKnight
                 yield return new WaitForSeconds(idleTime);
             }
             if (lastC != null) StopCoroutine(lastC);
-            lastC = StartCoroutine(FlySweep());
+            StartCoroutine(FlySweep());
             yield return new WaitWhile(() => !transition);
-            Log("Done");
+            transition = false;
 
             while (true)
             {
                 int rand = Random.Range(0, 2);
+                int rand2 = Random.Range(0, 10);
+                if (rand2==0)
+                {
+                    StartCoroutine(FlySweep());
+                    yield return new WaitWhile(() => !transition);
+                    transition = false;
+                }
                 if (aboveHead) lastC = StartCoroutine(PushUp());
-                else if (rand == 0 && !BallControl.unfair) lastC = StartCoroutine(AirAtt());
+                else if (rand == 0 && !BombControl.bombExist) lastC = StartCoroutine(AirAtt());
                 else lastC = StartCoroutine(Dash());
                 doNextAttack = false;
                 yield return new WaitWhile(() => !doNextAttack);
@@ -215,8 +222,11 @@ namespace PropellerKnight
             _rb.velocity = new Vector2(0f, 0f);
             float dir = FaceHero();
             _anim.Play("flair");
+            _anim.speed *= 1.3f;
+            yield return new WaitForSeconds(0.05f);
             yield return new WaitWhile(() => _anim.IsPlaying());
             yield return new WaitForSeconds(0.05f);
+            _anim.speed /= 1.3f;
             _anim.Play("summon");
             _rb.velocity = new Vector2(dir * 15f, 15f);
             yield return new WaitForSeconds(0.5f);
@@ -227,11 +237,11 @@ namespace PropellerKnight
             _rb.velocity = new Vector2(0f, 0f);
             _rb.gravityScale = 0f;
             _anim.Play("idle");
+
             SpawnWave(true);
             SpawnWave(false);
-            Log("DD");
 
-            yield return new WaitForSeconds(0.7f);
+            yield return new WaitForSeconds(0.9f);
             doNextAttack = true;
 
         }
@@ -252,7 +262,7 @@ namespace PropellerKnight
         {
             float dir = FaceHero();
             _anim.Play("dashAntic");
-            yield return new WaitForSeconds(0.2f);
+            yield return new WaitForSeconds(0.35f);
             _anim.Play("dash");
             while (_anim.GetCurrentFrame() < 1)
             {
@@ -281,7 +291,8 @@ namespace PropellerKnight
             yield return new WaitWhile(() => _anim.IsPlaying());
             FaceHero();
             _rb.velocity = new Vector2(0f, 0f);
-            yield return new WaitForSeconds(0.05f);
+            if (_hm.hp > HP_PHASE2) yield return new WaitForSeconds(0.05f);
+            else yield return new WaitForSeconds(0.25f);
             doNextAttack = true;
         }
 
@@ -343,6 +354,7 @@ namespace PropellerKnight
 
         }
 
+        private GameObject ship;
         IEnumerator FlySweep()
         {
             Vector2 origPos = new Vector2(103f, 4f);
@@ -362,9 +374,18 @@ namespace PropellerKnight
                 yield return new WaitForEndOfFrame();
             }
             _anim.Play("summon");
-            GameObject ship = SpawnShip();
+            float ti = 2f;
+            if (!ship)
+            {
+                ship = SpawnShip();
+            }
+            else
+            {
+                ti = 0.5f;
+                ship.GetComponent<ShipControl>().sendLargeBalls = true;
+            }
             FaceHero();
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(ti);
             float offset = 1.5f;
             int count = 0;
             _anim.Play("fly");
@@ -407,7 +428,8 @@ namespace PropellerKnight
             yield return new WaitForSeconds(1f);
             _anim.Play("flair");
             yield return new WaitWhile(() => _anim.IsPlaying());
-            ship.GetComponent<ShipControl>().idleTime = 3.5f;
+            //ship.GetComponent<ShipControl>().idleTime = 3.5f;
+            ship.GetComponent<ShipControl>().sendLargeBalls = false;
             transition = true;
         }
 
