@@ -2,6 +2,7 @@
 using ModCommon.Util;
 using Modding;
 using System.Collections;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 using Logger = Modding.Logger;
@@ -36,8 +37,9 @@ namespace PropellerKnight
         private const float GROUND_Y = 5.25f;
         private const float RIGHT_X = 115.5f;
         private const float LEFT_X = 88.5f;
-        private const int HP_MAX = 225;
-        private const int HP_PHASE2 = 150;
+        private const int HP_MAX = 1000;
+        private const int HP_PHASE2 = 700;
+        private EnemyHitEffectsUninfected _hitEffects;
 
         private void Awake()
         {
@@ -49,6 +51,8 @@ namespace PropellerKnight
             _hm = gameObject.GetComponent<HealthManager>();
             _aud = gameObject.AddComponent<AudioSource>();
             _anim = gameObject.GetComponent<Animator>();
+            _hitEffects = gameObject.AddComponent<EnemyHitEffectsUninfected>();
+            _hitEffects.enabled = true;
             _target = HeroController.instance;
         }
 
@@ -93,6 +97,25 @@ namespace PropellerKnight
             }
             _anim.Play("fly");
             StartCoroutine(AttackChoice());
+            AssignFields();
+        }
+        
+        private void AssignFields()
+        {
+            Log("Assigning fields");
+            GameObject hornet = PropellerKnight.preloadedGO["hornet"];
+            EnemyHitEffectsUninfected ogrimHitEffects = hornet.GetComponent<EnemyHitEffectsUninfected>();
+            foreach (FieldInfo fi in typeof(EnemyHitEffectsUninfected).GetFields(BindingFlags.Instance | BindingFlags.Public))
+            {
+                if (fi.Name.Contains("Origin"))
+                {
+                    _hitEffects.effectOrigin = new Vector3(0f, 0.0f, 0f);
+                    continue;
+                }
+                fi.SetValue(_hitEffects, fi.GetValue(ogrimHitEffects));
+            }
+
+            Log("End of assignment");
         }
 
         private int Instance_TakeHealthHook(int damage)

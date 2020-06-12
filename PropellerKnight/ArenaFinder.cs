@@ -5,6 +5,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Reflection;
 using System.Linq;
+using MonoMod.Cil;
+using UnityEngine.UI;
 using Logger = Modding.Logger;
 using UObject = UnityEngine.Object;
 using USceneManager = UnityEngine.SceneManagement.SceneManager;
@@ -16,9 +18,7 @@ namespace PropellerKnight
         public static Dictionary<string, AudioClip> audioClips;
         public static Dictionary<string, Material> materials;
         public static Dictionary<string, RuntimeAnimatorController> animators;
-        public static bool tier1;
-        public static bool tier2;
-        public static bool tier3;
+        public static int BossLevel = -1;
         public static List<Sprite> sprites;
         public static GameObject windPart;
         public static AnimationClip explodePart;
@@ -29,30 +29,27 @@ namespace PropellerKnight
         //xH >= 244.3f && xH <= 252.7f && yH >= 6f && yH <= 7f
         private void Start()
         {
+            PlayerData.instance.hornet1Defeated = true;
+
             audioClips = new Dictionary<string, AudioClip>();
             materials = new Dictionary<string, Material>();
             sprites = new List<Sprite>();
             animators = new Dictionary<string, RuntimeAnimatorController>();
-
-            string path = "";
-            switch(SystemInfo.operatingSystemFamily)
-            {
-                case OperatingSystemFamily.Windows:
-                    path = "propkWin";
-                    break;
-                case OperatingSystemFamily.Linux:
-                    path = "propkLin";
-                    break;
-                case OperatingSystemFamily.MacOSX:
-                    path = "propkMC";
-                    break;
-                default:
-                    Log("ERROR UNSUPPORTED SYSTEM: " + SystemInfo.operatingSystemFamily);
-                    return;
-            }
+            
             USceneManager.activeSceneChanged += SceneChanged;
-            AssetBundle ab = AssetBundle.LoadFromFile(Path.Combine(Application.streamingAssetsPath, path));
-            UObject[] assets = ab.LoadAllAssets();
+            On.BossChallengeUI.LoadBoss_int_bool += BossChallengeUI_LoadBoss_int_bool;
+            On.GameManager.BeginSceneTransition += GameManager_BeginSceneTransition;
+            AssetBundle ab = null;
+            foreach (var i in PropellerKnight.assetbundles)
+            {
+                if (i.Key.Contains("propk")) ab = i.Value;
+            }
+
+            if (ab == null)
+            {
+                Log("ERROR: Bundles did not load.");
+                return;
+            }
             PropellerKnight.preloadedGO["prop"] = ab.LoadAsset("prop asset") as GameObject;
             PropellerKnight.preloadedGO["ship"] = ab.LoadAsset("ship") as GameObject;
             PropellerKnight.preloadedGO["ball"] = ab.LoadAsset<GameObject>("ballBig");
@@ -74,55 +71,71 @@ namespace PropellerKnight
             //ab.Unload(false);
 
         }
-        private void SceneChanged(Scene arg0, Scene arg1)
+
+        private void SceneChanged(Scene arg0, Scene arg1) //Fungus1_04_boss
         {
+            if (arg1.name == "GG_Workshop") SetStatue();
+            if (BossLevel == -1) return;
+            if (arg1.name != "GG_Mighty_Zote") BossLevel = -1;
             if (arg0.name == "GG_Mighty_Zote" && arg1.name == "GG_Workshop")
             {
                 GameCameras.instance.cameraFadeFSM.Fsm.SetState("FadeIn");
+                foreach (GameObject go in FindObjectsOfType<GameObject>().Where(x => !x.name.Contains(gameObject.name) && x.GetComponent<DamageHero>() != null))
+                {
+                    Destroy(go);
+                }
                 Destroy(prop.GetComponent<PropFight>());
+                Destroy(prop.GetComponent<PropDeath>());
                 Destroy(prop);
                 PlayerData.instance.isInvincible = false;
             }
-
-            if (arg1.name == "GG_Workshop") SetStatue();
 
             if (arg1.name != "GG_Mighty_Zote") return;
             if (arg0.name != "GG_Workshop") return;
             StartCoroutine(AddComponent());
         }
+        
+        private void GameManager_BeginSceneTransition(On.GameManager.orig_BeginSceneTransition orig, GameManager self, GameManager.SceneLoadInfo info)
+        {
+            Log("PROP " + info.EntryGateName);
+            Log("PROP " + BossLevel);
+            if (info.SceneName == "GG_Workshop" && BossLevel != -1)
+            {
+                info.EntryGateName = "door_dreamReturnGGPropeller";
+            }
 
+            orig(self, info);
+        }
+        
+        //For Godhome
         private void SetStatue()
         {
-
             //Used 56's pale prince code here
             GameObject statue = Instantiate(GameObject.Find("GG_Statue_ElderHu"));
-            statue.transform.SetPosition2D(25.4f, statue.transform.GetPositionY());//6.5f); //248
+            statue.transform.SetPosition2D(30f, statue.transform.GetPositionY());//6.5f); //248
             var scene = ScriptableObject.CreateInstance<BossScene>();
             scene.sceneName = "GG_Mighty_Zote";
             var bs = statue.GetComponent<BossStatue>();
             bs.bossScene = scene;
-            bs.statueStatePD = "PropKnightArena";
-            //if () bs.StatueState = 
-            var gg = new BossStatue.Completion
+            bs.statueStatePD = "statueStateProp";
+            foreach (Transform i in statue.transform)
             {
-                completedTier1 = true,
-                seenTier3Unlock = true,
-                completedTier2 = true,
-                completedTier3 = true,
-                isUnlocked = true,
-                hasBeenSeen = true,
-                usingAltVersion = false,
-            };
-            bs.StatueState = gg;
+                if (i.name.Contains("door"))
+                {
+                    i.name = "door_dreamReturnGGPropeller";
+                }
+            }
+            bs.SetPlaquesVisible(bs.StatueState.isUnlocked && bs.StatueState.hasBeenSeen);
+            bs.StatueState = ((GlobalModSettings) PropellerKnight.Instance.GlobalSettings).CompletionPropeller;
             var details = new BossStatue.BossUIDetails();
             details.nameKey = details.nameSheet = "PROP_NAME";
             details.descriptionKey = details.descriptionSheet = "PROP_DESC";
             bs.bossDetails = details;
             foreach (var i in bs.statueDisplay.GetComponentsInChildren<SpriteRenderer>(true))
             {
-                i.sprite = new Sprite();
+                i.sprite = PropellerKnight.Sprites[0];
+                i.transform.localScale *= 1.6f;
             }
-
         }
 
         private IEnumerator AddComponent()
@@ -145,10 +158,23 @@ namespace PropellerKnight
 
             prop.AddComponent<PropFight>();
         }
+        
+        private void BossChallengeUI_LoadBoss_int_bool(On.BossChallengeUI.orig_LoadBoss_int_bool orig, BossChallengeUI self, int level, bool doHideAnim)
+        {
+            string bName = self.transform.Find("Panel").Find("BossName_Text").GetComponent<Text>().text;
+            Log("GO " + bName);
+            if (bName.Contains("Propeller"))
+            {
+                BossLevel = level;
+            }
+            orig(self, level, doHideAnim);
+        }
 
         private void OnDestroy()
         {
             USceneManager.activeSceneChanged -= SceneChanged;
+            On.GameManager.BeginSceneTransition -= GameManager_BeginSceneTransition;
+            On.BossChallengeUI.LoadBoss_int_bool -= BossChallengeUI_LoadBoss_int_bool;
         }
         public static void Log(object o)
         {

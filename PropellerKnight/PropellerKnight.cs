@@ -1,8 +1,16 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using System.Diagnostics;
+using System.Reflection;
 using Modding;
-using System.Collections.Generic;
+using JetBrains.Annotations;
+using ModCommon;
+using MonoMod.RuntimeDetour;
+using UnityEngine.SceneManagement;
 using UnityEngine;
+using USceneManager = UnityEngine.SceneManagement.SceneManager;
 using UObject = UnityEngine.Object;
+using System.Collections.Generic;
+using System.IO;
 
 namespace PropellerKnight
 {
@@ -12,6 +20,14 @@ namespace PropellerKnight
         public static Dictionary<string, GameObject> preloadedGO = new Dictionary<string, GameObject>();
         public static PropellerKnight Instance;
         public static readonly List<Sprite> SPRITES = new List<Sprite>();
+        public static Dictionary<string, AssetBundle> assetbundles = new Dictionary<string, AssetBundle>();
+        public static readonly List<Sprite> Sprites = new List<Sprite>();
+        public override ModSettings GlobalSettings
+        {
+            get => _settings;
+            set => _settings = (GlobalModSettings) value;
+        }
+        private GlobalModSettings _settings = new GlobalModSettings();
 
         public override string GetVersion()
         {
@@ -47,6 +63,53 @@ namespace PropellerKnight
             ModHooks.Instance.AfterSavegameLoadHook += AfterSaveGameLoad;
             ModHooks.Instance.NewGameHook += AddComponent;
             ModHooks.Instance.LanguageGetHook += LangGet;
+            ModHooks.Instance.SetPlayerVariableHook += SetVariableHook;
+            ModHooks.Instance.GetPlayerVariableHook += GetVariableHook;
+            
+            string path = "";
+            switch (SystemInfo.operatingSystemFamily)
+            {
+                case OperatingSystemFamily.Windows:
+                    path = "propkWin";
+                    break;
+                case OperatingSystemFamily.Linux:
+                    path = "propkLin";
+                    break;
+                case OperatingSystemFamily.MacOSX:
+                    path = "propkMC";
+                    break;
+                default:
+                    Log("ERROR UNSUPPORTED SYSTEM: " + SystemInfo.operatingSystemFamily);
+                    return;
+            }
+            
+            Assembly asm = Assembly.GetExecutingAssembly();
+            int ind = 0;
+            foreach (string res in asm.GetManifestResourceNames())
+            {
+                using (Stream s = asm.GetManifestResourceStream(res))
+                {
+                    if (s == null) continue;
+                    byte[] buffer = new byte[s.Length];
+                    s.Read(buffer, 0, buffer.Length);
+                    s.Dispose();
+                    if (res.EndsWith(".png"))
+                    {
+                        // Create texture from bytes
+                        var tex = new Texture2D(1, 1);
+                        tex.LoadImage(buffer, true);
+                        // Create sprite from texture
+                        Sprites.Add(Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f)));
+                        Log("Created sprite from embedded image: " + res + " at ind " + ++ind);
+                    }
+                    else
+                    {
+                        string bundleName = Path.GetExtension(res).Substring(1);
+                        if (bundleName != path) continue;
+                        assetbundles[bundleName] = AssetBundle.LoadFromMemory(buffer);   
+                    }
+                }
+            }
         }
 
         private string LangGet(string key, string sheettitle)
@@ -60,7 +123,21 @@ namespace PropellerKnight
                 default: return Language.Language.GetInternal(key, sheettitle);
             }
         }
+        
+        private object SetVariableHook(Type t, string key, object obj)
+        {
+            if (key == "statueStateProp")
+                _settings.CompletionPropeller = (BossStatue.Completion)obj;
+            return obj;
+        }
 
+        private object GetVariableHook(Type t, string key, object orig)
+        {
+            if (key == "statueStateProp")
+                return _settings.CompletionPropeller;
+            return orig;
+        }
+        
         private void AfterSaveGameLoad(SaveGameData data) => AddComponent();
 
         private void AddComponent()
@@ -75,6 +152,8 @@ namespace PropellerKnight
             ModHooks.Instance.AfterSavegameLoadHook -= AfterSaveGameLoad;
             ModHooks.Instance.NewGameHook -= AddComponent;
             ModHooks.Instance.LanguageGetHook -= LangGet;
+            ModHooks.Instance.SetPlayerVariableHook -= SetVariableHook;
+            ModHooks.Instance.GetPlayerVariableHook -= GetVariableHook;
 
             // ReSharper disable once Unity.NoNullPropogation
             var x = GameManager.instance?.gameObject.GetComponent<ArenaFinder>();

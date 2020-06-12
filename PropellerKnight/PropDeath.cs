@@ -22,6 +22,19 @@ namespace PropellerKnight
 
         private void Start()
         {
+            if (ArenaFinder.BossLevel == 0)
+            {
+                ((GlobalModSettings) PropellerKnight.Instance.GlobalSettings).CompletionPropeller.completedTier1 = true;
+            }
+            else if (ArenaFinder.BossLevel == 1)
+            {
+                ((GlobalModSettings) PropellerKnight.Instance.GlobalSettings).CompletionPropeller.completedTier2 = true;
+            }
+            else
+            {
+                ((GlobalModSettings) PropellerKnight.Instance.GlobalSettings).CompletionPropeller.completedTier3 = true;
+            }
+            
             isDying = true;
             _sr.material.SetFloat("_FlashAmount", 0f);
             _rb.velocity = new Vector2(0f, 0f);
