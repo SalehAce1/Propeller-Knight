@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Reflection;
 using Modding;
 using JetBrains.Annotations;
-using ModCommon;
-using MonoMod.RuntimeDetour;
-using UnityEngine.SceneManagement;
 using UnityEngine;
 using USceneManager = UnityEngine.SceneManagement.SceneManager;
 using UObject = UnityEngine.Object;
@@ -15,19 +11,17 @@ using System.IO;
 namespace PropellerKnight
 {
     [UsedImplicitly]
-    public class PropellerKnight : Mod, ITogglableMod
+    public class PropellerKnight : Mod, ITogglableMod,IGlobalSettings<GlobalModSettings>
     {
         public static Dictionary<string, GameObject> preloadedGO = new Dictionary<string, GameObject>();
         public static PropellerKnight Instance;
         public static readonly List<Sprite> SPRITES = new List<Sprite>();
         public static Dictionary<string, AssetBundle> assetbundles = new Dictionary<string, AssetBundle>();
         public static readonly List<Sprite> Sprites = new List<Sprite>();
-        public override ModSettings GlobalSettings
-        {
-            get => _settings;
-            set => _settings = (GlobalModSettings) value;
-        }
-        private GlobalModSettings _settings = new GlobalModSettings();
+       
+        public static GlobalModSettings _settings = new GlobalModSettings();
+        public void OnLoadGlobal(GlobalModSettings s)=>_settings = s;
+        public GlobalModSettings OnSaveGlobal() => _settings;
 
         public override string GetVersion()
         {
@@ -60,11 +54,10 @@ namespace PropellerKnight
             Log("Initalizing.");
 
             Unload();
-            ModHooks.Instance.AfterSavegameLoadHook += AfterSaveGameLoad;
-            ModHooks.Instance.NewGameHook += AddComponent;
-            ModHooks.Instance.LanguageGetHook += LangGet;
-            ModHooks.Instance.SetPlayerVariableHook += SetVariableHook;
-            ModHooks.Instance.GetPlayerVariableHook += GetVariableHook;
+            On.HeroController.Start += AddCP;
+            ModHooks.LanguageGetHook += LangGet;
+            ModHooks.SetPlayerVariableHook += SetVariableHook;
+            ModHooks.GetPlayerVariableHook += GetVariableHook;
             
             string path = "";
             switch (SystemInfo.operatingSystemFamily)
@@ -112,7 +105,16 @@ namespace PropellerKnight
             }
         }
 
-        private string LangGet(string key, string sheettitle)
+        private void AddCP(On.HeroController.orig_Start orig, HeroController self)
+        {
+            orig(self);
+            if( GameManager.instance.gameObject.GetComponent<ArenaFinder>()==null)
+            {
+                AddComponent();
+            }
+        }
+
+        private string LangGet(string key, string sheettitle,string orig)
         {
             switch (key)
             {
@@ -120,7 +122,7 @@ namespace PropellerKnight
                 case "PROP_DESC": return "Airborne god of a distant land.";
                 case "testee": return "Huh...what a strange place this is. A world full of preposterous curves and dreams! And who might you be little knight?<page>A silent one you are, makes me almost miss my fabulous blue friend from across land and time.<page>In a different world I might have given you a tour of my magnificent ship first but time runs short. En Garde!<page>";
                 case "PROP_END": return "You show great strength tiny knight, but your prowess will do little against what is to come...<page>";
-                default: return Language.Language.GetInternal(key, sheettitle);
+                default:return orig;
             }
         }
         
@@ -137,8 +139,6 @@ namespace PropellerKnight
                 return _settings.CompletionPropeller;
             return orig;
         }
-        
-        private void AfterSaveGameLoad(SaveGameData data) => AddComponent();
 
         private void AddComponent()
         {
@@ -149,11 +149,10 @@ namespace PropellerKnight
         {
             AudioListener.volume = 1f;
             AudioListener.pause = false;
-            ModHooks.Instance.AfterSavegameLoadHook -= AfterSaveGameLoad;
-            ModHooks.Instance.NewGameHook -= AddComponent;
-            ModHooks.Instance.LanguageGetHook -= LangGet;
-            ModHooks.Instance.SetPlayerVariableHook -= SetVariableHook;
-            ModHooks.Instance.GetPlayerVariableHook -= GetVariableHook;
+            ModHooks.LanguageGetHook -= LangGet;
+            On.HeroController.Start -= AddCP;
+            ModHooks.SetPlayerVariableHook -= SetVariableHook;
+            ModHooks.GetPlayerVariableHook -= GetVariableHook;
 
             // ReSharper disable once Unity.NoNullPropogation
             var x = GameManager.instance?.gameObject.GetComponent<ArenaFinder>();

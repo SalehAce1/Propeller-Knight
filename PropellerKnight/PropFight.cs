@@ -1,12 +1,11 @@
 ﻿using HutongGames.PlayMaker.Actions;
-using ModCommon.Util;
 using Modding;
 using System.Collections;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 using Logger = Modding.Logger;
-
+using Satchel;
 namespace PropellerKnight
 {
     internal class PropFight : MonoBehaviour
@@ -60,7 +59,7 @@ namespace PropellerKnight
         {
             PropDeath.isDying = false;
 
-            ModHooks.Instance.TakeHealthHook += Instance_TakeHealthHook;
+            ModHooks.TakeHealthHook += Instance_TakeHealthHook;
             On.HealthManager.TakeDamage += HealthManager_TakeDamage;
             _hm.OnDeath += _hm_OnDeath;
 
@@ -509,7 +508,6 @@ namespace PropellerKnight
 
         IEnumerator EndingTextFade()
         {
-            CanvasUtil.CreateFonts();
             canvas = CanvasUtil.CreateCanvas(RenderMode.ScreenSpaceOverlay, new Vector2(1920f, 1080f));//1536f, 864f));
             title = CanvasUtil.CreateTextPanel(canvas, "Propeller Knight by Yacht Club Games", 40, TextAnchor.MiddleCenter, new CanvasUtil.RectData(new Vector2(1000, 1500), new Vector2(0f, 65f), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f)), false).GetComponent<Text>();
             title.color = new Color(1f, 1f, 1f, 0f);
@@ -661,7 +659,7 @@ namespace PropellerKnight
 
         private void OnDestroy()
         {
-            ModHooks.Instance.TakeHealthHook -= Instance_TakeHealthHook;
+            ModHooks.TakeHealthHook -= Instance_TakeHealthHook;
             On.HealthManager.TakeDamage -= HealthManager_TakeDamage;
             _hm.OnDeath -= _hm_OnDeath;
         }

@@ -1,11 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.IO;
+using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Reflection;
 using System.Linq;
-using MonoMod.Cil;
 using UnityEngine.UI;
 using Logger = Modding.Logger;
 using UObject = UnityEngine.Object;
@@ -126,7 +125,7 @@ namespace PropellerKnight
                 }
             }
             bs.SetPlaquesVisible(bs.StatueState.isUnlocked && bs.StatueState.hasBeenSeen);
-            bs.StatueState = ((GlobalModSettings) PropellerKnight.Instance.GlobalSettings).CompletionPropeller;
+            bs.StatueState = ((GlobalModSettings) PropellerKnight._settings).CompletionPropeller;
             var details = new BossStatue.BossUIDetails();
             details.nameKey = details.nameSheet = "PROP_NAME";
             details.descriptionKey = details.descriptionSheet = "PROP_DESC";
@@ -152,6 +151,7 @@ namespace PropellerKnight
             {
                 fi.SetValue(_hm, fi.GetValue(hornHP));
             }
+            ReflectionHelper.SetField(_hm, "enemyDamageAudio",ReflectionHelper.GetField<HealthManager, AudioEvent>(hornHP, "enemyDamageAudio"));
 
             var _sr = prop.GetComponent<SpriteRenderer>();
             _sr.material = materials["flash"];

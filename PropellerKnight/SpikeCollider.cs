@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-
 namespace PropellerKnight
 {
     internal class SpikeCollider : MonoBehaviour
