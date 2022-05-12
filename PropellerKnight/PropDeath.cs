@@ -24,15 +24,15 @@ namespace PropellerKnight
         {
             if (ArenaFinder.BossLevel == 0)
             {
-                ((GlobalModSettings) PropellerKnight.Instance.GlobalSettings).CompletionPropeller.completedTier1 = true;
+                ((GlobalModSettings) PropellerKnight._settings).CompletionPropeller.completedTier1 = true;
             }
             else if (ArenaFinder.BossLevel == 1)
             {
-                ((GlobalModSettings) PropellerKnight.Instance.GlobalSettings).CompletionPropeller.completedTier2 = true;
+                ((GlobalModSettings) PropellerKnight._settings).CompletionPropeller.completedTier2 = true;
             }
             else
             {
-                ((GlobalModSettings) PropellerKnight.Instance.GlobalSettings).CompletionPropeller.completedTier3 = true;
+                ((GlobalModSettings) PropellerKnight._settings).CompletionPropeller.completedTier3 = true;
             }
             
             isDying = true;
